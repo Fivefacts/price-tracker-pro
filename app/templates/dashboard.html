@@ -1,0 +1,336 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Price Tracker Pro{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2>
+            <i class="bi bi-speedometer2"></i> Mon Dashboard
+            {% if current_user.is_premium %}
+                <span class="badge bg-warning">Premium</span>
+            {% endif %}
+        </h2>
+    </div>
+    <div class="col-md-4 text-end">
+        <button id="check-prices-btn" class="btn btn-success btn-lg">
+            <i class="bi bi-arrow-clockwise"></i> Vérifier les prix maintenant
+        </button>
+        <div id="check-status" class="mt-2" style="display: none;"></div>
+    </div>
+</div>
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <i class="bi bi-plus-circle"></i> Ajouter un produit à surveiller
+            </div>
+            <div class="card-body">
+                {% if can_add_more %}
+                <form method="POST" action="{{ url_for('add_product') }}">
+    <div class="mb-3">
+        <label for="url" class="form-label">URL du produit</label>
+        <input type="url" class="form-control" id="url" name="url" 
+               placeholder="https://www.amazon.fr/..." required>
+        <div class="form-text">
+            Collez l'URL complète du produit
+        </div>
+    </div>
+    
+    <hr>
+    <p class="text-muted"><small><i class="bi bi-exclamation-circle"></i> Si le scraping automatique ne fonctionne pas, remplissez ces champs :</small></p>
+    
+    <div class="mb-3">
+        <label for="product_name" class="form-label">Nom du produit (manuel)</label>
+        <input type="text" class="form-control" id="product_name" name="product_name" 
+               placeholder="Ex: iPhone 15 Pro">
+    </div>
+    
+    <div class="mb-3">
+        <label for="current_price" class="form-label">Prix actuel (manuel)</label>
+        <div class="input-group">
+            <input type="number" step="0.01" class="form-control" id="current_price" 
+                   name="current_price" placeholder="999.99">
+            <span class="input-group-text">€</span>
+        </div>
+    </div>
+    
+    <hr>
+    
+    <div class="mb-3">
+        <label for="target_price" class="form-label">Prix cible (optionnel)</label>
+        <div class="input-group">
+            <input type="number" step="0.01" class="form-control" id="target_price" 
+                   name="target_price" placeholder="799.99">
+            <span class="input-group-text">€</span>
+        </div>
+        <div class="form-text">
+            Vous recevrez une alerte si le prix descend en dessous
+        </div>
+    </div>
+    
+    <button type="submit" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> Ajouter le produit
+    </button>
+</form>
+                {% else %}
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    Vous avez atteint la limite de {{ max_products }} produits.
+                    <a href="{{ url_for('upgrade') }}" class="alert-link">Passez Premium</a> pour un suivi illimité !
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="bi bi-info-circle"></i> Statistiques
+                </h5>
+                <div class="mb-2">
+                    <strong>Produits surveillés :</strong> {{ products|length }} / {{ max_products }}
+                </div>
+                <div class="mb-2">
+                    <strong>Plan actuel :</strong> 
+                    {% if current_user.is_premium %}
+                        <span class="badge bg-warning">Premium</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Gratuit</span>
+                    {% endif %}
+                </div>
+                {% if not current_user.is_premium %}
+                <hr>
+                <a href="{{ url_for('upgrade') }}" class="btn btn-warning btn-sm w-100">
+                    <i class="bi bi-star-fill"></i> Passer Premium
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <h4 class="mb-3">
+            <i class="bi bi-list-check"></i> Mes produits surveillés
+        </h4>
+        
+        {% if products %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Produit</th>
+                        <th>Prix actuel</th>
+                        <th>Prix cible</th>
+                        <th>Dernière vérif.</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr>
+                        <td>
+                            <strong>{{ product.name[:50] }}...</strong>
+                        </td>
+                        <td>
+    {% if product.current_price %}
+        {% if product.target_price and product.current_price <= product.target_price %}
+            <span class="badge bg-success price-badge">
+                {{ "%.2f"|format(product.current_price) }}€
+            </span>
+            <span class="badge bg-warning">🎯 CIBLE ATTEINTE !</span>
+        {% else %}
+            <span class="badge bg-primary price-badge">
+                {{ "%.2f"|format(product.current_price) }}€
+            </span>
+        {% endif %}
+    {% else %}
+        <span class="badge bg-secondary">N/A</span>
+    {% endif %}
+</td>
+                        <td>
+    <div id="target-display-{{ product.id }}">
+        {% if product.target_price %}
+            <span class="target-price-value">{{ "%.2f"|format(product.target_price) }}€</span>
+            {% if product.current_price and product.current_price <= product.target_price %}
+                <i class="bi bi-check-circle-fill text-success" title="Objectif atteint !"></i>
+            {% endif %}
+        {% else %}
+            <span class="text-muted target-price-value">Non défini</span>
+        {% endif %}
+        <button class="btn btn-sm btn-outline-secondary ms-2" onclick="editTargetPrice({{ product.id }}, {{ product.target_price if product.target_price else 'null' }})">
+            <i class="bi bi-pencil"></i>
+        </button>
+    </div>
+    <div id="target-edit-{{ product.id }}" style="display: none;">
+        <div class="input-group input-group-sm">
+            <input type="number" step="0.01" class="form-control" id="target-input-{{ product.id }}" 
+                   value="{{ product.target_price if product.target_price else '' }}" 
+                   placeholder="Ex: 99.99">
+            <span class="input-group-text">€</span>
+            <button class="btn btn-success" onclick="saveTargetPrice({{ product.id }})">
+                <i class="bi bi-check"></i>
+            </button>
+            <button class="btn btn-secondary" onclick="cancelEditTargetPrice({{ product.id }})">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+    </div>
+</td>
+                        <td>
+                            <small class="text-muted">
+                                {% if product.last_checked %}
+                                    {{ product.last_checked.strftime('%d/%m/%Y %H:%M') }}
+                                {% else %}
+                                    Jamais
+                                {% endif %}
+                            </small>
+                        </td>
+                        <td>
+                            <a href="{{ product.url }}" target="_blank" class="btn btn-sm btn-outline-primary" title="Voir le produit">
+                                <i class="bi bi-box-arrow-up-right"></i>
+                            </a>
+                            <a href="{{ url_for('delete_product', product_id=product.id) }}" 
+                               class="btn btn-sm btn-outline-danger"
+                               onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')" 
+                               title="Supprimer">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i>
+            Aucun produit surveillé pour le moment. Ajoutez-en un ci-dessus pour commencer !
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('check-prices-btn').addEventListener('click', function() {
+    const btn = this;
+    const statusDiv = document.getElementById('check-status');
+    
+    // Désactiver le bouton et montrer le chargement
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Vérification en cours...';
+    statusDiv.style.display = 'block';
+    statusDiv.innerHTML = '<div class="alert alert-info"><i class="bi bi-hourglass-split"></i> Vérification des prix en cours...</div>';
+    
+    // Appeler l'API
+    fetch('/api/check-prices')
+        .then(response => response.json())
+        .then(data => {
+            // Afficher le succès
+            statusDiv.innerHTML = `
+                <div class="alert alert-success alert-dismissible fade show">
+                    <i class="bi bi-check-circle-fill"></i> 
+                    <strong>Vérification terminée !</strong> ${data.checked} produit(s) vérifié(s). 
+                    ${data.alerts_sent > 0 ? `${data.alerts_sent} alerte(s) envoyée(s) par email !` : 'Aucune alerte à envoyer.'}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            
+            // Réactiver le bouton
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Vérifier les prix maintenant';
+            
+            // Recharger la page après 2 secondes pour afficher les nouveaux prix
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        })
+        .catch(error => {
+            statusDiv.innerHTML = `
+                <div class="alert alert-danger alert-dismissible fade show">
+                    <i class="bi bi-exclamation-triangle-fill"></i> 
+                    <strong>Erreur !</strong> Impossible de vérifier les prix.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Vérifier les prix maintenant';
+        });
+});
+
+// NOUVELLES FONCTIONS pour modifier le prix cible
+function editTargetPrice(productId, currentPrice) {
+    // Masquer l'affichage
+    document.getElementById('target-display-' + productId).style.display = 'none';
+    // Afficher le formulaire d'édition
+    document.getElementById('target-edit-' + productId).style.display = 'block';
+    // Focus sur l'input
+    document.getElementById('target-input-' + productId).focus();
+}
+
+function cancelEditTargetPrice(productId) {
+    // Afficher l'affichage
+    document.getElementById('target-display-' + productId).style.display = 'block';
+    // Masquer le formulaire d'édition
+    document.getElementById('target-edit-' + productId).style.display = 'none';
+}
+
+function saveTargetPrice(productId) {
+    const newPrice = document.getElementById('target-input-' + productId).value;
+    
+    // Afficher un indicateur de chargement
+    const editDiv = document.getElementById('target-edit-' + productId);
+    editDiv.innerHTML = '<span class="text-muted"><i class="bi bi-hourglass-split"></i> Enregistrement...</span>';
+    
+    // Envoyer la requête
+    fetch(`/update-target-price/${productId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            target_price: newPrice
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Afficher un message de succès
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+            alertDiv.style.zIndex = '9999';
+            alertDiv.innerHTML = `
+                <i class="bi bi-check-circle-fill"></i> ${data.message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(alertDiv);
+            
+            // Retirer l'alerte après 3 secondes
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 3000);
+            
+            // Recharger la page pour afficher la nouvelle valeur
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            alert('Erreur : ' + data.message);
+            location.reload();
+        }
+    })
+    .catch(error => {
+        alert('Erreur lors de la mise à jour');
+        location.reload();
+    });
+}
+
+</script>
+
+{% endblock %}

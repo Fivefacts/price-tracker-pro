@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Price Tracker Pro - Surveillez les prix, économisez de l'argent{% endblock %}
+
+{% block content %}
+<div class="text-center py-5">
+    <h1 class="display-4 fw-bold mb-3">
+        <i class="bi bi-graph-down-arrow text-success"></i> Price Tracker Pro
+    </h1>
+    <p class="lead text-muted mb-4">
+        Ne manquez plus jamais une bonne affaire. Surveillez vos produits préférés et recevez des alertes.
+    </p>
+    <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg me-2">
+        <i class="bi bi-rocket-takeoff"></i> Commencer Gratuitement
+    </a>
+    <a href="{{ url_for('login') }}" class="btn btn-outline-secondary btn-lg">
+        Connexion
+    </a>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-4 text-center mb-4">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <i class="bi bi-bell-fill text-primary" style="font-size: 3rem;"></i>
+                <h5 class="card-title mt-3">Alertes Automatiques</h5>
+                <p class="card-text text-muted">
+                    Recevez un email dès que le prix atteint votre objectif
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 text-center mb-4">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <i class="bi bi-clock-history text-success" style="font-size: 3rem;"></i>
+                <h5 class="card-title mt-3">Historique des Prix</h5>
+                <p class="card-text text-muted">
+                    Visualisez l'évolution des prix dans le temps
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 text-center mb-4">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <i class="bi bi-lightning-charge-fill text-warning" style="font-size: 3rem;"></i>
+                <h5 class="card-title mt-3">Suivi en Temps Réel</h5>
+                <p class="card-text text-muted">
+                    Vérification automatique toutes les 6 heures
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5 mb-5">
+    <div class="col-lg-8 mx-auto">
+        <div class="card bg-light border-0">
+            <div class="card-body text-center p-5">
+                <h3 class="mb-3">Forfaits Simple et Transparent</h3>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="card">
+                            <div class="card-header bg-white">
+                                <h5 class="mb-0">Gratuit</h5>
+                            </div>
+                            <div class="card-body">
+                                <h2 class="text-primary">0€</h2>
+                                <ul class="list-unstyled mt-3">
+                                    <li><i class="bi bi-check-circle-fill text-success"></i> Jusqu'à 3 produits</li>
+                                    <li><i class="bi bi-check-circle-fill text-success"></i> Vérification toutes les 6h</li>
+                                    <li><i class="bi bi-check-circle-fill text-success"></i> Alertes par email</li>
+                                </ul>
+                                <a href="{{ url_for('register') }}" class="btn btn-outline-primary mt-3">Commencer</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <div class="card border-warning">
+                            <div class="card-header bg-warning text-white">
+                                <h5 class="mb-0"><i class="bi bi-star-fill"></i> Premium</h5>
+                            </div>
+                            <div class="card-body">
+                                <h2 class="text-primary">4.99€<small class="text-muted">/mois</small></h2>
+                                <ul class="list-unstyled mt-3">
+                                    <li><i class="bi bi-check-circle-fill text-success"></i> Produits illimités</li>
+                                    <li><i class="bi bi-check-circle-fill text-success"></i> Vérification toutes les 6h</li>
+                                    <li><i class="bi bi-check-circle-fill text-success"></i> Alertes par email</li>
+                                    <li><i class="bi bi-check-circle-fill text-success"></i> Support prioritaire</li>
+                                </ul>
+                                <a href="{{ url_for('register') }}" class="btn btn-warning mt-3">Essayer Premium</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
