@@ -28,7 +28,7 @@ email_service = EmailService()
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return db.session.get(User, int(user_id))
 
 # Routes d'authentification
 @app.route('/register', methods=['GET', 'POST'])
@@ -152,7 +152,9 @@ def add_product():
 @app.route('/delete-product/<int:product_id>')
 @login_required
 def delete_product(product_id):
-    product = Product.query.get_or_404(product_id)
+    product = db.session.get(Product, product_id)
+    if not product:
+        return redirect(url_for('dashboard'))
     
     if product.user_id != current_user.id:
         flash('Accès non autorisé', 'error')
@@ -167,8 +169,9 @@ def delete_product(product_id):
 @app.route('/update-target-price/<int:product_id>', methods=['POST'])
 @login_required
 def update_target_price(product_id):
-    """Modifier le prix cible d'un produit"""
-    product = Product.query.get_or_404(product_id)
+    product = db.session.get(Product, product_id)
+    if not product:
+        return jsonify({'success': False, 'message': 'Produit non trouvé'}), 404
     
     # Vérifier que le produit appartient bien à l'utilisateur
     if product.user_id != current_user.id:
@@ -221,7 +224,7 @@ def check_all_prices():
             
             # Envoyer email si prix cible atteint
             if product.target_price and price <= product.target_price:
-                user = User.query.get(product.user_id)
+    		user = db.session.get(User, product.user_id)
                 print(f"📧 Envoi d'email à {user.email} pour {product.name} (prix: {price}€, cible: {product.target_price}€)")
                 email_service.send_price_alert(user.email, product.name, price, product.url)
                 alerts_sent += 1
