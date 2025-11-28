@@ -3,7 +3,12 @@ from flask_login import LoginManager, login_user, logout_user, login_required, c
 from werkzeug.security import generate_password_hash, check_password_hash
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime
+import sys
 import os
+
+# Ajouter le dossier app au path
+sys.path.insert(0, os.path.dirname(__file__))
+
 from models import db, User, Product, PriceHistory
 from scraper import PriceScraper
 from email_service import EmailService
