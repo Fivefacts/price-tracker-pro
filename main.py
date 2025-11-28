@@ -221,7 +221,7 @@ def check_all_prices():
             
             # Envoyer email si prix cible atteint
             if product.target_price and price <= product.target_price:
-    		user = db.session.get(User, product.user_id)
+                user = db.session.get(User, product.user_id)
                 print(f"📧 Envoi d'email à {user.email} pour {product.name} (prix: {price}€, cible: {product.target_price}€)")
                 email_service.send_price_alert(user.email, product.name, price, product.url)
                 alerts_sent += 1
