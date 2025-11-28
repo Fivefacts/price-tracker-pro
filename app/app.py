@@ -3,10 +3,10 @@ from flask_login import LoginManager, login_user, logout_user, login_required, c
 from werkzeug.security import generate_password_hash, check_password_hash
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime
-import sys
 import os
+import sys
 
-# Ajouter le dossier app au path
+# Ajouter le dossier app au path pour les imports
 sys.path.insert(0, os.path.dirname(__file__))
 
 from models import db, User, Product, PriceHistory
