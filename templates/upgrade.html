@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Passer Premium - Price Tracker Pro{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-lg-8">
+        <div class="text-center mb-5">
+            <h1 class="display-5 fw-bold">
+                <i class="bi bi-star-fill text-warning"></i> Passez Premium
+            </h1>
+            <p class="lead text-muted">
+                Déverrouillez toutes les fonctionnalités et surveillez un nombre illimité de produits
+            </p>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Plan Gratuit</h5>
+                    </div>
+                    <div class="card-body">
+                        <h2 class="text-muted">0€</h2>
+                        <ul class="list-unstyled mt-4">
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle text-success"></i> 
+                                Jusqu'à 3 produits
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle text-success"></i> 
+                                Vérification toutes les 6h
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle text-success"></i> 
+                                Alertes email
+                            </li>
+                            <li class="mb-2 text-muted">
+                                <i class="bi bi-x-circle"></i> 
+                                Produits illimités
+                            </li>
+                            <li class="mb-2 text-muted">
+                                <i class="bi bi-x-circle"></i> 
+                                Support prioritaire
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 border-warning shadow-lg">
+                    <div class="card-header bg-warning text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-star-fill"></i> Plan Premium
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <h2 class="text-primary">
+                            4,99€ 
+                            <small class="text-muted fs-6">/mois</small>
+                        </h2>
+                        <ul class="list-unstyled mt-4">
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle-fill text-success"></i> 
+                                <strong>Produits illimités</strong>
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle-fill text-success"></i> 
+                                Vérification toutes les 6h
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle-fill text-success"></i> 
+                                Alertes email
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle-fill text-success"></i> 
+                                Historique détaillé des prix
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle-fill text-success"></i> 
+                                Support prioritaire
+                            </li>
+                        </ul>
+                        
+                        <div class="d-grid gap-2 mt-4">
+                            <button class="btn btn-warning btn-lg" id="checkout-button">
+                                <i class="bi bi-credit-card"></i> Passer Premium maintenant
+                            </button>
+                        </div>
+                        
+                        <p class="text-center text-muted small mt-3">
+                            Paiement sécurisé via Stripe. Annulez à tout moment.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert alert-info mt-4">
+            <h5><i class="bi bi-info-circle-fill"></i> Fonctionnalité de paiement</h5>
+            <p class="mb-0">
+                L'intégration Stripe est prête ! Pour activer les paiements réels, configurez vos clés API Stripe 
+                dans les variables d'environnement. En attendant, vous pouvez tester toutes les autres fonctionnalités.
+            </p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('checkout-button').addEventListener('click', function() {
+    alert('Intégration Stripe à configurer avec vos clés API.\n\nPour activer :\n1. Créez un compte Stripe\n2. Ajoutez vos clés dans .env\n3. Configurez les webhooks');
+});
+</script>
+{% endblock %}
