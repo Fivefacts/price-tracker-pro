@@ -1,3 +1,4 @@
+# Web scraping module for price extraction
 import requests
 from bs4 import BeautifulSoup
 import re

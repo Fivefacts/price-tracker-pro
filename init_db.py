@@ -1,3 +1,4 @@
+# Database initialization script
 """Script pour initialiser la base de données"""
 from main import app, db
 
