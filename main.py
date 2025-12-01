@@ -199,38 +199,54 @@ def upgrade():
 
 @app.route('/api/check-prices')
 def check_all_prices():
-    """API endpoint pour vérifier tous les prix"""
-    products = Product.query.filter_by(is_active=True).all()
-    alerts_sent = 0
+    """API endpoint pour vérifier tous les prix - Version optimisée"""
+    from threading import Thread
     
-    for product in products:
-        name, price = scraper.get_price(product.url)
-        
-        # Si le scraping échoue mais qu'on a déjà un prix, on utilise le prix existant
-        if not price and product.current_price:
-            price = product.current_price
-            print(f"⚠️ Scraping échoué, utilisation du prix existant: {price}€")
-        
-        if price:
-            product.current_price = price
-            product.last_checked = datetime.utcnow()
+    def check_prices_async():
+        with app.app_context():
+            products = Product.query.filter_by(is_active=True).all()
+            alerts_sent = 0
             
-            # Enregistrer l'historique
-            history = PriceHistory(product_id=product.id, price=price)
-            db.session.add(history)
+            for product in products:
+                try:
+                    name, price = scraper.get_price(product.url)
+                    
+                    # Si le scraping échoue mais qu'on a déjà un prix, on utilise le prix existant
+                    if not price and product.current_price:
+                        price = product.current_price
+                        print(f"⚠️ Scraping échoué, utilisation du prix existant: {price}€")
+                    
+                    if price:
+                        product.current_price = price
+                        product.last_checked = datetime.utcnow()
+                        
+                        # Enregistrer l'historique
+                        history = PriceHistory(product_id=product.id, price=price)
+                        db.session.add(history)
+                        
+                        # Envoyer email si prix cible atteint
+                        if product.target_price and price <= product.target_price:
+                            user = db.session.get(User, product.user_id)
+                            print(f"📧 Envoi d'email à {user.email} pour {product.name} (prix: {price}€, cible: {product.target_price}€)")
+                            email_service.send_price_alert(user.email, product.name, price, product.url)
+                            alerts_sent += 1
+                except Exception as e:
+                    print(f"Erreur lors de la vérification de {product.name}: {str(e)}")
+                    continue
             
-            # Envoyer email si prix cible atteint
-            if product.target_price and price <= product.target_price:
-                user = db.session.get(User, product.user_id)
-                print(f"📧 Envoi d'email à {user.email} pour {product.name} (prix: {price}€, cible: {product.target_price}€)")
-                email_service.send_price_alert(user.email, product.name, price, product.url)
-                alerts_sent += 1
+            db.session.commit()
+            print(f"✅ Vérification terminée : {len(products)} produits, {alerts_sent} alertes")
     
-    db.session.commit()
+    # Lancer la vérification dans un thread séparé
+    thread = Thread(target=check_prices_async)
+    thread.start()
+    
+    # Répondre immédiatement
+    products_count = Product.query.filter_by(is_active=True).count()
     return jsonify({
-        'status': 'success', 
-        'checked': len(products),
-        'alerts_sent': alerts_sent
+        'status': 'started', 
+        'message': f'Vérification en cours pour {products_count} produit(s)',
+        'checked': products_count
     })
 
 # Scheduler pour vérifier les prix régulièrement
