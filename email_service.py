@@ -1,29 +1,23 @@
-# Email notification service
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+# Email notification service - Version API SendGrid
 import os
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 
 class EmailService:
     def __init__(self):
-        self.smtp_server = os.environ.get('SMTP_SERVER', 'smtp.gmail.com')
-        self.smtp_port = int(os.environ.get('SMTP_PORT', 587))
+        # Utiliser la clé API au lieu de SMTP
+        self.api_key = os.environ.get('SENDER_PASSWORD', '')
         self.sender_email = os.environ.get('SENDER_EMAIL', '')
-        self.sender_password = os.environ.get('SENDER_PASSWORD', '')
 
     def send_price_alert(self, recipient_email, product_name, current_price, product_url):
-        """Envoyer une alerte de prix"""
-        print(f"🔧 DEBUG - Configuration email:")
-        print(f"  SMTP Server: {self.smtp_server}")
-        print(f"  SMTP Port: {self.smtp_port}")
+        """Envoyer une alerte de prix via l'API SendGrid"""
+        print(f"🔧 DEBUG - Configuration email API:")
+        print(f"  API Key configured: {'Oui' if self.api_key else 'Non'}")
         print(f"  Sender: {self.sender_email}")
-        print(f"  Password configured: {'Oui' if self.sender_password else 'Non'}")
         
-        if not self.sender_email or not self.sender_password:
-            print("❌ Email credentials not configured")
+        if not self.sender_email or not self.api_key:
+            print("❌ Email API credentials not configured")
             return False
-
-        subject = f"🔥 Alerte Prix : {product_name}"
 
         html_body = f"""
         <html>
@@ -52,31 +46,24 @@ class EmailService:
         """
 
         try:
-            print("📧 Tentative de connexion SMTP...")
-            message = MIMEMultipart('alternative')
-            message['Subject'] = subject
-            message['From'] = self.sender_email
-            message['To'] = recipient_email
-
-            html_part = MIMEText(html_body, 'html')
-            message.attach(html_part)
-
-            print(f"📧 Connexion à {self.smtp_server}:{self.smtp_port}...")
-            with smtplib.SMTP(self.smtp_server, self.smtp_port, timeout=30) as server:
-                print("📧 Démarrage TLS...")
-                server.starttls()
-                print("📧 Authentification...")
-                server.login(self.sender_email, self.sender_password)
-                print("📧 Envoi du message...")
-                server.send_message(message)
-
-            print(f"✅ Email sent to {recipient_email}")
+            print("📧 Envoi via API SendGrid...")
+            message = Mail(
+                from_email=self.sender_email,
+                to_emails=recipient_email,
+                subject=f"🔥 Alerte Prix : {product_name}",
+                html_content=html_body
+            )
+            
+            sg = SendGridAPIClient(self.api_key)
+            response = sg.send(message)
+            
+            print(f"✅ Email sent to {recipient_email} (status: {response.status_code})")
             return True
+            
         except Exception as e:
-            print(f"❌ ERREUR EMAIL DÉTAILLÉE:")
+            print(f"❌ ERREUR API SendGrid:")
             print(f"  Type: {type(e).__name__}")
             print(f"  Message: {str(e)}")
             import traceback
-            print("  Traceback complet:")
             traceback.print_exc()
             return False
